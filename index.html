@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Academic Deadline Calendar</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="student">
+
+  <!-- Header -->
+  <div class="header">
+    <h1>Academic Deadline Calendar</h1>
+    <div>
+      Login as:
+      <select id="role" onchange="changeRole()">
+        <option value="student">Student</option>
+        <option value="faculty">Faculty</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="main">
+
+    <!-- Reminder box -->
+    <div id="reminderBox" class="reminder"></div>
+
+    <!-- Month buttons and view buttons -->
+    <div class="top-row">
+      <div>
+        <button onclick="goPrevious()">&lt; Prev</button>
+        <button onclick="goToday()">Today</button>
+        <button onclick="goNext()">Next &gt;</button>
+        <span id="title" class="month-title"></span>
+      </div>
+      <div>
+        <button id="monthBtn" onclick="setView('month')">Month</button>
+        <button id="listBtn" onclick="setView('list')">List</button>
+      </div>
+    </div>
+
+    <!-- Filters and buttons -->
+    <div class="filters">
+      <input type="text" id="search" placeholder="Search..." oninput="showCalendar()">
+      <select id="courseFilter" onchange="showCalendar()"></select>
+      <select id="typeFilter" onchange="showCalendar()">
+        <option value="all">All types</option>
+        <option>Assignment</option>
+        <option>Exam</option>
+        <option>Quiz</option>
+        <option>Project</option>
+        <option>Lab</option>
+        <option>Activity</option>
+      </select>
+
+      <button class="faculty-only blue" onclick="openForm('', '')">+ Add Event</button>
+      <button class="faculty-only" onclick="addCourse()">+ Add Course</button>
+      <button onclick="exportCSV()">Export CSV</button>
+      <button onclick="exportICS()">Export ICS</button>
+    </div>
+
+    <!-- Calendar is shown here -->
+    <div id="calendar"></div>
+  </div>
+
+  <!-- Add / Edit event form (popup) -->
+  <div id="formBox" class="popup">
+    <div class="popup-content">
+      <h3 id="formTitle">Add Event</h3>
+
+      <label>Title</label>
+      <input type="text" id="evTitle">
+
+      <label>Course</label>
+      <select id="evCourse"></select>
+
+      <label>Type</label>
+      <select id="evType">
+        <option>Assignment</option>
+        <option>Exam</option>
+        <option>Quiz</option>
+        <option>Project</option>
+        <option>Lab</option>
+        <option>Activity</option>
+      </select>
+
+      <label>Date</label>
+      <input type="date" id="evDate">
+
+      <label>Time</label>
+      <input type="time" id="evTime">
+
+      <label>Repeat</label>
+      <select id="evRepeat">
+        <option value="none">No repeat</option>
+        <option value="daily">Daily</option>
+        <option value="weekly">Weekly</option>
+        <option value="monthly">Monthly</option>
+      </select>
+
+      <label>Repeat until (only for repeating events)</label>
+      <input type="date" id="evUntil">
+
+      <label>Reminder</label>
+      <select id="evReminder">
+        <option value="0">On the same day</option>
+        <option value="1">1 day before</option>
+        <option value="2">2 days before</option>
+        <option value="7">1 week before</option>
+      </select>
+
+      <label>Description</label>
+      <textarea id="evDesc" rows="3"></textarea>
+
+      <div class="popup-buttons">
+        <button id="deleteBtn" class="red" onclick="deleteEvent()">Delete</button>
+        <button onclick="closeForm()">Cancel</button>
+        <button class="blue" onclick="saveEvent()">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Event details (popup) -->
+  <div id="detailBox" class="popup">
+    <div class="popup-content">
+      <div id="detailText"></div>
+      <p><input type="checkbox" id="doneBox" onchange="markDone()"> Mark as done</p>
+      <div class="popup-buttons">
+        <button onclick="closeDetail()">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
