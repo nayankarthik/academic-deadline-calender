@@ -1,260 +1,158 @@
-// VARIABLES
-let events = JSON.parse(localStorage.getItem("events")) || [];
-let view = "month";
-let month = new Date();
+var events = JSON.parse(localStorage.getItem("events")) || [];
+var courses = ["CSE", "Maths", "Physics"];
+var date = new Date();
 
-let courses = ["Data Structures", "Database Systems",
-               "Web Technologies", "Coding Club"];
-
-let types = ["Assignment", "Exam", "Quiz", "Project", "Other"];
-let role = "student";
-
-// SAVE EVENTS
 function save() {
     localStorage.setItem("events", JSON.stringify(events));
 }
 
-// SAMPLE EVENTS
-let y = month.getFullYear();
-let m = String(month.getMonth() + 1).padStart(2, "0");
-
-let samples = [
-    {title:"Assignment 1", course:"Data Structures", type:"Assignment", date:y+"-"+m+"-05", time:"10:00"},
-    {title:"Unit Test", course:"Database Systems", type:"Exam", date:y+"-"+m+"-10", time:"11:00"},
-    {title:"Weekly Quiz", course:"Web Technologies", type:"Quiz", date:y+"-"+m+"-16", time:"12:00"},
-    {title:"Mini Project", course:"Coding Club", type:"Project", date:y+"-"+m+"-22", time:"14:00"},
-    {title:"Assignment 2", course:"Database Systems", type:"Assignment", date:y+"-"+m+"-27", time:"10:00"}
-];
-
-samples.forEach(s => {
-    if (!events.some(e => e.title == s.title && e.date == s.date)) {
-        events.push(s);
-    }
-});
-
-save();
-
-// FILL DROPDOWNS
-function fillFilters() {
-    document.getElementById("courseFilter").innerHTML =
-        "<option value='all'>All Subjects</option>";
-
-    courses.forEach(c => {
-        document.getElementById("courseFilter").innerHTML +=
-            "<option value='" + c + "'>" + c + "</option>";
-    });
-
-    document.getElementById("typeFilter").innerHTML =
-        "<option value='all'>All Types</option>";
-
-    types.forEach(t => {
-        document.getElementById("typeFilter").innerHTML +=
-            "<option value='" + t + "'>" + t + "</option>";
-    });
-
-    document.getElementById("evCourse").innerHTML = "";
-    document.getElementById("evType").innerHTML = "";
-
-    courses.forEach(c => {
-        document.getElementById("evCourse").innerHTML +=
-            "<option value='" + c + "'>" + c + "</option>";
-    });
-
-    types.forEach(t => {
-        document.getElementById("evType").innerHTML +=
-            "<option value='" + t + "'>" + t + "</option>";
-    });
-}
-
-// CHANGE ROLE
 function changeRole() {
-    role = document.getElementById("role").value;
-    document.body.className = role;
+    document.body.className = document.getElementById("role").value;
     showCalendar();
 }
 
-// FILTER EVENTS
-function getEvents() {
-    let course = document.getElementById("courseFilter").value;
-    let type = document.getElementById("typeFilter").value;
-    let search = document.getElementById("search").value.toLowerCase();
-
-    return events.filter(e =>
-        (course == "all" || e.course == course) &&
-        (type == "all" || e.type == type) &&
-        e.title.toLowerCase().includes(search)
-    );
+function goPrevious() {
+    date.setMonth(date.getMonth() - 1);
+    showCalendar();
 }
 
-// CHANGE VIEW
+function goNext() {
+    date.setMonth(date.getMonth() + 1);
+    showCalendar();
+}
+
+function goToday() {
+    date = new Date();
+    showCalendar();
+}
+
 function setView(v) {
     view = v;
     showCalendar();
 }
 
-// CHANGE MONTH
-function goPrevious() {
-    month.setMonth(month.getMonth() - 1);
-    showCalendar();
-}
+var view = "month";
+var editId = null;
 
-function goNext() {
-    month.setMonth(month.getMonth() + 1);
-    showCalendar();
-}
-
-function goToday() {
-    month = new Date();
-    showCalendar();
-}
-
-// DISPLAY CALENDAR
 function showCalendar() {
-    if (view == "month") {
-        showMonth();
-    } else {
-        showList();
-    }
-}
+    document.getElementById("title").innerText =
+        date.toLocaleString("default", {month:"long"}) + " " + date.getFullYear();
 
-// MONTH VIEW
-function showMonth() {
-    let year = month.getFullYear();
-    let m = month.getMonth();
-    let total = new Date(year, m + 1, 0).getDate();
-    let first = new Date(year, m, 1).getDay();
-    let filtered = getEvents();
+    var html = "";
+    var filtered = events.filter(e =>
+        e.title.toLowerCase().includes(document.getElementById("search").value.toLowerCase()) &&
+        (document.getElementById("typeFilter").value == "all" ||
+        e.type == document.getElementById("typeFilter").value)
+    );
 
-    document.getElementById("title").innerHTML =
-        month.toLocaleString("default", {month:"long"}) + " " + year;
-
-    if (role == "faculty") {
-        document.getElementById("title").innerHTML +=
-            " <button onclick='openForm()'>+ Add Event</button>";
-    }
-
-    let html = "<table><tr>";
-
-    ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"].forEach(d => {
-        html += "<th>" + d + "</th>";
-    });
-
-    html += "</tr><tr>";
-
-    for (let i = 0; i < first; i++) {
-        html += "<td></td>";
-    }
-
-    for (let i = 1; i <= total; i++) {
-        let d = year + "-" + String(m + 1).padStart(2, "0") +
-                "-" + String(i).padStart(2, "0");
-
-        html += "<td onclick=\"clickDay('" + d + "')\">" + i;
-
+    if (view == "list") {
         filtered.forEach(e => {
-            if (e.date == d) {
-                html += "<div class='event'>" + e.type + ": " +
-                        e.title + "<br><small>" + e.course +
-                        "</small></div>";
-            }
+            html += `<div class="list-item" onclick="openForm(${e.id})">
+                ${e.title} - ${e.date} - ${e.type}</div>`;
         });
+    } else {
+        html = "<table><tr>";
+        ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"].forEach(d => html += `<th>${d}</th>`);
+        html += "</tr><tr>";
 
-        html += "</td>";
+        var first = new Date(date.getFullYear(), date.getMonth(), 1).getDay();
+        var days = new Date(date.getFullYear(), date.getMonth()+1, 0).getDate();
 
-        if ((first + i) % 7 == 0) {
-            html += "</tr><tr>";
-        }
-    }
+        for (var i=0; i<first; i++) html += "<td></td>";
 
-    document.getElementById("calendar").innerHTML =
-        html + "</tr></table>";
-}
+        for (var d=1; d<=days; d++) {
+            var day = date.getFullYear()+"-"+String(date.getMonth()+1).padStart(2,"0")+"-"+String(d).padStart(2,"0");
 
-// LIST VIEW
-function showList() {
-    document.getElementById("title").innerHTML = "All Events";
+            html += `<td onclick="openForm('', '${day}')"><b>${d}</b>`;
 
-    if (role == "faculty") {
-        document.getElementById("title").innerHTML +=
-            " <button onclick='openForm()'>+ Add Event</button>";
-    }
+            filtered.forEach(e => {
+                if (e.date == day)
+                    html += `<div class="event">${e.title}</div>`;
+            });
 
-    let html = "";
-
-    getEvents().forEach((e, i) => {
-        html += "<p><b>" + e.title + "</b><br>";
-        html += e.course + " | " + e.type + "<br>";
-        html += e.date + " | " + e.time;
-
-        if (role == "faculty") {
-            html += " <button onclick='deleteEvent(" +
-                    events.indexOf(e) + ")'>Delete</button>";
+            html += "</td>";
+            if ((first+d)%7 == 0) html += "</tr><tr>";
         }
 
-        html += "</p>";
-    });
-
-    document.getElementById("calendar").innerHTML =
-        html || "No events";
-}
-
-// CLICK DATE
-function clickDay(d) {
-    if (role == "faculty") {
-        openForm(d);
+        html += "</tr></table>";
     }
+
+    document.getElementById("calendar").innerHTML = html;
 }
 
-// OPEN FORM
-function openForm(d = "") {
+function openForm(id="", day="") {
+    editId = id;
+    var e = events.find(x => x.id == id);
+
     document.getElementById("formBox").style.display = "block";
-    document.getElementById("evTitle").value = "";
-    document.getElementById("evDate").value = d;
-    document.getElementById("evTime").value = "";
+    document.getElementById("evTitle").value = e ? e.title : "";
+    document.getElementById("evDate").value = e ? e.date : day;
+    document.getElementById("evType").value = e ? e.type : "Assignment";
+    document.getElementById("evCourse").value = e ? e.course : courses[0];
+    document.getElementById("deleteBtn").style.display = e ? "inline-block" : "none";
 }
 
-// ADD EVENT
+function closeForm() {
+    document.getElementById("formBox").style.display = "none";
+}
+
 function saveEvent() {
-    let title = document.getElementById("evTitle").value;
-    let date = document.getElementById("evDate").value;
-    let time = document.getElementById("evTime").value;
-    let course = document.getElementById("evCourse").value;
-    let type = document.getElementById("evType").value;
+    var e = {
+        id: editId || Date.now(),
+        title: document.getElementById("evTitle").value,
+        course: document.getElementById("evCourse").value,
+        type: document.getElementById("evType").value,
+        date: document.getElementById("evDate").value
+    };
 
-    if (title == "" || date == "") {
-        alert("Enter event details");
-        return;
-    }
+    if (!e.title || !e.date) return alert("Enter title and date");
 
-    events.push({
-        title: title,
-        date: date,
-        time: time,
-        course: course,
-        type: type
-    });
+    if (editId) {
+        var i = events.findIndex(x => x.id == editId);
+        events[i] = e;
+    } else events.push(e);
 
     save();
     closeForm();
     showCalendar();
 }
 
-// DELETE EVENT
-function deleteEvent(i) {
-    events.splice(i, 1);
+function deleteEvent() {
+    events = events.filter(e => e.id != editId);
     save();
+    closeForm();
     showCalendar();
 }
 
-// CLOSE FORM
-function closeForm() {
-    document.getElementById("formBox").style.display = "none";
+function closeDetail() {
+    document.getElementById("detailBox").style.display = "none";
 }
 
-// START WEBSITE
-fillFilters();
+function markDone() {
+    alert("Event marked as done!");
+}
 
-role = document.getElementById("role").value;
-document.body.className = role;
+function addCourse() {
+    var c = prompt("Enter course name");
+    if (c) {
+        courses.push(c);
+        var s = document.getElementById("evCourse");
+        s.innerHTML += `<option>${c}</option>`;
+    }
+}
 
-showCalendar();
+function exportCSV() {
+    var text = "Title,Course,Type,Date\n";
+    events.forEach(e => text += `${e.title},${e.course},${e.type},${e.date}\n`);
+
+    var a = document.createElement("a");
+    a.href = URL.createObjectURL(new Blob([text]));
+    a.download = "events.csv";
+    a.click();
+}
+
+function exportICS() {
+    alert("ICS export is not included in this short version.");
+}
+
+changeRole();
