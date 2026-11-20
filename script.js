@@ -2,31 +2,37 @@
 let events = JSON.parse(localStorage.getItem("events")) || [];
 let view = "month";
 let month = new Date();
+
 let courses = ["Data Structures", "Database Systems",
                "Web Technologies", "Coding Club"];
+
 let types = ["Assignment", "Exam", "Quiz", "Project", "Other"];
 let role = "student";
-
-// SAMPLE EVENTS
-if (events.length == 0) {
-    let y = month.getFullYear();
-    let m = String(month.getMonth()+1).padStart(2,"0");
-
-    events = [
-        {title:"Assignment 1", course:"Data Structures", type:"Assignment", date:y+"-"+m+"-05", time:"10:00"},
-        {title:"Unit Test", course:"Database Systems", type:"Exam", date:y+"-"+m+"-10", time:"11:00"},
-        {title:"Weekly Quiz", course:"Web Technologies", type:"Quiz", date:y+"-"+m+"-16", time:"12:00"},
-        {title:"Mini Project", course:"Coding Club", type:"Project", date:y+"-"+m+"-22", time:"14:00"},
-        {title:"Assignment 2", course:"Database Systems", type:"Assignment", date:y+"-"+m+"-27", time:"10:00"}
-    ];
-
-    save();
-}
 
 // SAVE EVENTS
 function save() {
     localStorage.setItem("events", JSON.stringify(events));
 }
+
+// SAMPLE EVENTS
+let y = month.getFullYear();
+let m = String(month.getMonth() + 1).padStart(2, "0");
+
+let samples = [
+    {title:"Assignment 1", course:"Data Structures", type:"Assignment", date:y+"-"+m+"-05", time:"10:00"},
+    {title:"Unit Test", course:"Database Systems", type:"Exam", date:y+"-"+m+"-10", time:"11:00"},
+    {title:"Weekly Quiz", course:"Web Technologies", type:"Quiz", date:y+"-"+m+"-16", time:"12:00"},
+    {title:"Mini Project", course:"Coding Club", type:"Project", date:y+"-"+m+"-22", time:"14:00"},
+    {title:"Assignment 2", course:"Database Systems", type:"Assignment", date:y+"-"+m+"-27", time:"10:00"}
+];
+
+samples.forEach(s => {
+    if (!events.some(e => e.title == s.title && e.date == s.date)) {
+        events.push(s);
+    }
+});
+
+save();
 
 // FILL DROPDOWNS
 function fillFilters() {
@@ -35,7 +41,7 @@ function fillFilters() {
 
     courses.forEach(c => {
         document.getElementById("courseFilter").innerHTML +=
-            "<option>" + c + "</option>";
+            "<option value='" + c + "'>" + c + "</option>";
     });
 
     document.getElementById("typeFilter").innerHTML =
@@ -43,7 +49,7 @@ function fillFilters() {
 
     types.forEach(t => {
         document.getElementById("typeFilter").innerHTML +=
-            "<option>" + t + "</option>";
+            "<option value='" + t + "'>" + t + "</option>";
     });
 
     document.getElementById("evCourse").innerHTML = "";
@@ -51,12 +57,12 @@ function fillFilters() {
 
     courses.forEach(c => {
         document.getElementById("evCourse").innerHTML +=
-            "<option>" + c + "</option>";
+            "<option value='" + c + "'>" + c + "</option>";
     });
 
     types.forEach(t => {
         document.getElementById("evType").innerHTML +=
-            "<option>" + t + "</option>";
+            "<option value='" + t + "'>" + t + "</option>";
     });
 }
 
@@ -88,12 +94,12 @@ function setView(v) {
 
 // CHANGE MONTH
 function goPrevious() {
-    month.setMonth(month.getMonth()-1);
+    month.setMonth(month.getMonth() - 1);
     showCalendar();
 }
 
 function goNext() {
-    month.setMonth(month.getMonth()+1);
+    month.setMonth(month.getMonth() + 1);
     showCalendar();
 }
 
@@ -104,19 +110,23 @@ function goToday() {
 
 // DISPLAY CALENDAR
 function showCalendar() {
-    if (view == "month") showMonth();
-    else showList();
+    if (view == "month") {
+        showMonth();
+    } else {
+        showList();
+    }
 }
 
 // MONTH VIEW
 function showMonth() {
     let year = month.getFullYear();
     let m = month.getMonth();
-    let total = new Date(year,m+1,0).getDate();
-    let first = new Date(year,m,1).getDay();
+    let total = new Date(year, m + 1, 0).getDate();
+    let first = new Date(year, m, 1).getDay();
+    let filtered = getEvents();
 
     document.getElementById("title").innerHTML =
-        month.toLocaleString("default",{month:"long"})+" "+year;
+        month.toLocaleString("default", {month:"long"}) + " " + year;
 
     if (role == "faculty") {
         document.getElementById("title").innerHTML +=
@@ -126,33 +136,38 @@ function showMonth() {
     let html = "<table><tr>";
 
     ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"].forEach(d => {
-        html += "<th>"+d+"</th>";
+        html += "<th>" + d + "</th>";
     });
 
     html += "</tr><tr>";
 
-    for (let i=0;i<first;i++) html += "<td></td>";
+    for (let i = 0; i < first; i++) {
+        html += "<td></td>";
+    }
 
-    for (let i=1;i<=total;i++) {
-        let d = year+"-"+String(m+1).padStart(2,"0")+
-                "-"+String(i).padStart(2,"0");
+    for (let i = 1; i <= total; i++) {
+        let d = year + "-" + String(m + 1).padStart(2, "0") +
+                "-" + String(i).padStart(2, "0");
 
-        html += "<td onclick=\"clickDay('"+d+"')\">"+i;
+        html += "<td onclick=\"clickDay('" + d + "')\">" + i;
 
-        getEvents().forEach(e => {
+        filtered.forEach(e => {
             if (e.date == d) {
-                html += "<div class='event'>"+e.type+": "+e.title+
-                        "<br><small>"+e.course+"</small></div>";
+                html += "<div class='event'>" + e.type + ": " +
+                        e.title + "<br><small>" + e.course +
+                        "</small></div>";
             }
         });
 
         html += "</td>";
 
-        if ((first+i)%7==0) html += "</tr><tr>";
+        if ((first + i) % 7 == 0) {
+            html += "</tr><tr>";
+        }
     }
 
     document.getElementById("calendar").innerHTML =
-        html+"</tr></table>";
+        html + "</tr></table>";
 }
 
 // LIST VIEW
@@ -166,10 +181,17 @@ function showList() {
 
     let html = "";
 
-    getEvents().forEach(e => {
-        html += "<p><b>"+e.title+"</b><br>";
-        html += e.course+" | "+e.type+"<br>";
-        html += e.date+" | "+e.time+"</p>";
+    getEvents().forEach((e, i) => {
+        html += "<p><b>" + e.title + "</b><br>";
+        html += e.course + " | " + e.type + "<br>";
+        html += e.date + " | " + e.time;
+
+        if (role == "faculty") {
+            html += " <button onclick='deleteEvent(" +
+                    events.indexOf(e) + ")'>Delete</button>";
+        }
+
+        html += "</p>";
     });
 
     document.getElementById("calendar").innerHTML =
@@ -178,7 +200,9 @@ function showList() {
 
 // CLICK DATE
 function clickDay(d) {
-    if (role == "faculty") openForm(d);
+    if (role == "faculty") {
+        openForm(d);
+    }
 }
 
 // OPEN FORM
@@ -203,15 +227,22 @@ function saveEvent() {
     }
 
     events.push({
-        title:title,
-        date:date,
-        time:time,
-        course:course,
-        type:type
+        title: title,
+        date: date,
+        time: time,
+        course: course,
+        type: type
     });
 
     save();
     closeForm();
+    showCalendar();
+}
+
+// DELETE EVENT
+function deleteEvent(i) {
+    events.splice(i, 1);
+    save();
     showCalendar();
 }
 
@@ -220,6 +251,10 @@ function closeForm() {
     document.getElementById("formBox").style.display = "none";
 }
 
-// START
+// START WEBSITE
 fillFilters();
+
+role = document.getElementById("role").value;
+document.body.className = role;
+
 showCalendar();
